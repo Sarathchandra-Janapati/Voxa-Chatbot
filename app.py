@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="static")
+app = Flask(_name_, static_folder="static")  # ✅ fixed
 CORS(app)
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -48,6 +48,11 @@ def ask():
 
     return jsonify({"response": response_text, "audio_url": audio_url})
 
-if __name__ == "__main__":
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Voxa is alive!"})
+
+# ✅ fixed
+if _name_ == "_main_":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
