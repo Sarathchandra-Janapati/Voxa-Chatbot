@@ -5,6 +5,7 @@ import asyncio
 import edge_tts
 import threading
 from playsound import playsound
+import os
 from dotenv import load_dotenv  # ✅ Add this
 
 load_dotenv()
