@@ -11,11 +11,12 @@ async function sendMessage(message) {
     typingIndicator.style.display = "block";
 
     // Send to backend
-    const response = await fetch("http://127.0.0.1:5000/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message })
+    const response = await fetch("https://voxa-chatbot.onrender.com/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
     });
+
     const data = await response.json();
 
     typingIndicator.style.display = "none";
