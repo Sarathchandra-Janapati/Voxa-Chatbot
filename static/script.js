@@ -36,7 +36,7 @@ async function sendMessage(message) {
 
         // ✅ Speak new response only if it's the latest
         if (data.audio_url) {
-            currentAudio = new Audio(data.audio_url);
+            currentAudio = new Audio("https://voxa-chatbot.onrender.com" + data.audio_url);
             currentAudio.play();
 
             currentAudio.onended = () => {
