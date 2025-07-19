@@ -5,25 +5,19 @@ const voiceBtn = document.getElementById("voice-btn");
 const typingIndicator = document.getElementById("typing-indicator");
 
 let currentAudio = null;
-let currentRequestId = 0; // ✅ To prevent mixing responses
+let currentRequestId = 0; // ✅ Prevents mixed responses
 let autoListenTimer = null;
 
 async function sendMessage(message) {
     if (!message.trim()) return;
 
-    // ✅ Stop previous speech immediately
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio = null;
-    }
-
-    clearTimeout(autoListenTimer); // Stop any auto-listen timer
+    // ✅ Stop previous speech immediately if user interrupts
+    stopCurrentSpeech();
 
     addMessage(message, "user");
     typingIndicator.style.display = "block";
 
-    const requestId = ++currentRequestId; // ✅ Track the latest request
+    const requestId = ++currentRequestId; // ✅ Only the latest request matters
 
     try {
         const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
@@ -34,20 +28,20 @@ async function sendMessage(message) {
 
         const data = await response.json();
 
-        // ✅ If this is not the latest request, ignore it (prevents mixing)
+        // ✅ If user interrupted and a new request was made, ignore this response
         if (requestId !== currentRequestId) return;
 
         typingIndicator.style.display = "none";
         addMessage(data.response, "ai");
 
-        // ✅ Play speech and auto-listen after speaking
+        // ✅ Speak new response only if it's the latest
         if (data.audio_url) {
             currentAudio = new Audio(data.audio_url);
             currentAudio.play();
 
             currentAudio.onended = () => {
-                currentAudio = null;
-                autoStartListening(); // ✅ Auto voice recognition after speech ends
+                // ✅ If still latest request, auto-listen
+                if (requestId === currentRequestId) autoStartListening();
             };
         } else {
             autoStartListening();
@@ -68,16 +62,25 @@ function addMessage(text, sender) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ✅ Auto-start listening after bot finishes speaking
-function autoStartListening() {
+function stopCurrentSpeech() {
+    // ✅ Stop previous audio immediately
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
     clearTimeout(autoListenTimer);
-
-    autoListenTimer = setTimeout(() => {
-        recognition.start();
-    }, 1000); // wait 1s before listening
 }
 
-// ✅ Button click
+// ✅ Auto voice listening after response ends
+function autoStartListening() {
+    clearTimeout(autoListenTimer);
+    autoListenTimer = setTimeout(() => {
+        recognition.start();
+    }, 1000);
+}
+
+// ✅ Send button click
 sendBtn.addEventListener("click", () => {
     if (userInput.value.trim() !== "") {
         sendMessage(userInput.value.trim());
@@ -102,9 +105,9 @@ recognition.onresult = (event) => {
     const speechToText = event.results[0][0].transcript;
     userInput.value = speechToText;
     sendBtn.click();
+    stopCurrentSpeech(); // ✅ User interrupted → stop old speech immediately
 };
 
-// ✅ If the user speaks while auto-listening, cancel auto-listen timer
 recognition.onstart = () => {
     clearTimeout(autoListenTimer);
 };
