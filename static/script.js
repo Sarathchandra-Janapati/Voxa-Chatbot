@@ -11,7 +11,7 @@ async function sendMessage(message) {
     typingIndicator.style.display = "block";
 
     // Send to backend
-    const response = await fetch("https://voxa-chatbot.onrender.com/", {
+    const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message })
