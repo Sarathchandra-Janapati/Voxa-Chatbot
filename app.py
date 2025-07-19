@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(_name_, static_folder="static")  # ✅ fixed
+app = Flask(__name__, static_folder="static")  # ✅ fixed
 CORS(app)
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
