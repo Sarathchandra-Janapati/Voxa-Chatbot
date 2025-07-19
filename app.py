@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, render_template, url_for
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from groq import Groq
+import os
 import asyncio
 import edge_tts
-import os
 import uuid
 from dotenv import load_dotenv
 
@@ -21,7 +21,7 @@ def chat_with_ai(user_input):
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
-            {"role": "system", "content": "You are Voxa, a friendly and professional AI assistant."},
+            {"role": "system", "content": "You are Voxa, a friendly AI assistant."},
             {"role": "user", "content": user_input}
         ]
     )
@@ -35,11 +35,7 @@ def generate_speech(text):
     filename = f"{uuid.uuid4()}.mp3"
     mp3_path = os.path.join(AUDIO_DIR, filename)
     asyncio.run(edge_speak_async(text, mp3_path))
-    return filename
-
-@app.route("/")
-def index():
-    return render_template("index.html")
+    return f"/static/audio/{filename}"
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -48,8 +44,7 @@ def ask():
         return jsonify({"response": "Please say something!"})
 
     response_text = chat_with_ai(user_input)
-    mp3_filename = generate_speech(response_text)
-    audio_url = url_for("static", filename=f"audio/{mp3_filename}")
+    audio_url = generate_speech(response_text)
 
     return jsonify({"response": response_text, "audio_url": audio_url})
 
