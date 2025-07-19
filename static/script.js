@@ -8,7 +8,7 @@ async function sendMessage(message) {
     addMessage(message, "user");
     typingIndicator.style.display = "block";
 
-    const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
+    const response = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message })
@@ -19,7 +19,6 @@ async function sendMessage(message) {
 
     addMessage(data.response, "ai");
 
-    // ✅ Play AI Voice
     if (data.audio_url) {
         const audio = new Audio(data.audio_url);
         audio.play();
@@ -45,7 +44,6 @@ userInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendBtn.click();
 });
 
-// ✅ Voice recognition
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.lang = "en-US";
 
