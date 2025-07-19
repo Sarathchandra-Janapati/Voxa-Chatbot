@@ -2,4 +2,6 @@ flask
 flask-cors
 groq
 edge-tts
-playsound
+playsound==1.2.2
+setuptools<70
+wheel
