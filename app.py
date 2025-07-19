@@ -44,7 +44,7 @@ def generate_speech(text: str) -> str:
 def status():
     return jsonify({"status": "ok", "message": "Voxa API is running!"})
 
-@app.route("/ask", methods=["POST"])
+@app.route(methods=["POST"])
 def ask():
     user_input = request.json.get("message", "").strip()
     if not user_input:
