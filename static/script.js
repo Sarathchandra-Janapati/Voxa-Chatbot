@@ -20,7 +20,7 @@ async function sendMessage(message) {
     const requestId = ++currentRequestId; // ✅ Only the latest request matters
 
     try {
-        const response = await fetch("https://voxa-chatbot.onrender.com", {
+        const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message })
