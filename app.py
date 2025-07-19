@@ -5,13 +5,14 @@ import asyncio
 import edge_tts
 import threading
 from playsound import playsound
-import os
+from dotenv import load_dotenv  # ✅ Add this
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
+client = Groq(api_key=os.getenv("GROQ_API_KEY")) 
 speech_thread = None
 
 
