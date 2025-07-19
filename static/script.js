@@ -7,26 +7,48 @@ const typingIndicator = document.getElementById("typing-indicator");
 let audio = null;
 let recognition = null;
 
-// Initialize speech recognition once
+// Initialize speech recognition if available
 if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = "en-US";
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
+  recognition.onstart = () => {
+    showListening();
+  };
+
+  recognition.onend = () => {
+    hideIndicator();
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+    hideIndicator();
+  };
+
   recognition.onresult = (event) => {
     const speechToText = event.results[0][0].transcript;
     userInput.value = speechToText;
     sendBtn.click();
   };
+}
 
-  recognition.onerror = (event) => {
-    console.error("Speech recognition error:", event.error);
-  };
+// Show "Listening..." text
+function showListening() {
+  typingIndicator.style.display = "block";
+  typingIndicator.textContent = "Listening...";
+}
 
-  recognition.onend = () => {
-    // Optional: You can auto-restart recognition here if you want continuous listen
-  };
+// Show AI typing dots animation
+function showTyping() {
+  typingIndicator.style.display = "block";
+  typingIndicator.innerHTML = `<span></span><span></span><span></span>`;
+}
+
+// Hide typing/listening indicator
+function hideIndicator() {
+  typingIndicator.style.display = "none";
 }
 
 function stopAudio() {
@@ -37,24 +59,18 @@ function stopAudio() {
   }
 }
 
-function stopRecognition() {
-  if (recognition && recognition.recognizing) {
-    recognition.stop();
-  }
-}
-
 async function sendMessage(message) {
   if (!message) return;
 
   addMessage(message, "user");
   userInput.value = "";
-  typingIndicator.style.display = "block";
 
-  // Disable input to prevent spamming
+  showTyping();
+
+  // Disable buttons while processing
   sendBtn.disabled = true;
   voiceBtn.disabled = true;
 
-  // Stop any current speech playing
   stopAudio();
 
   try {
@@ -65,14 +81,12 @@ async function sendMessage(message) {
     });
 
     const data = await response.json();
-    typingIndicator.style.display = "none";
 
     addMessage(data.response, "ai");
 
     if (data.audio_url) {
       audio = new Audio(data.audio_url);
 
-      // When audio ends, auto-start recognition again (if available)
       audio.onended = () => {
         audio = null;
         if (recognition) recognition.start();
@@ -84,15 +98,13 @@ async function sendMessage(message) {
 
       audio.play();
     } else {
-      // If no audio, start recognition immediately
       if (recognition) recognition.start();
     }
   } catch (err) {
-    typingIndicator.style.display = "none";
     addMessage("Oops, something went wrong. Please try again.", "ai");
     console.error(err);
   } finally {
-    // Re-enable input/buttons
+    hideIndicator();
     sendBtn.disabled = false;
     voiceBtn.disabled = false;
   }
@@ -106,14 +118,14 @@ function addMessage(text, sender) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Send button triggers sendMessage
+// Send button click
 sendBtn.addEventListener("click", () => {
   if (userInput.value.trim() !== "") {
     sendMessage(userInput.value.trim());
   }
 });
 
-// Enter key triggers send button
+// Enter key sends message
 userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendBtn.click();
 });
@@ -125,12 +137,12 @@ voiceBtn.addEventListener("click", () => {
     return;
   }
 
-  // Stop any playing audio to avoid overlap
+  // Stop playing audio to avoid overlap
   stopAudio();
 
-  // Stop current recognition if running to restart fresh
+  // Abort current recognition to restart fresh
   recognition.abort && recognition.abort();
 
-  // Start listening
+  // Start speech recognition
   recognition.start();
 });
