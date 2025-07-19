@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for, render_template
 from flask_cors import CORS
 from groq import Groq
 import os
@@ -9,13 +9,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 AUDIO_DIR = os.path.join(app.static_folder, "audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 def chat_with_ai(user_input):
     response = client.chat.completions.create(
@@ -35,14 +39,14 @@ def generate_speech(text):
     filename = f"{uuid.uuid4()}.mp3"
     mp3_path = os.path.join(AUDIO_DIR, filename)
     asyncio.run(edge_speak_async(text, mp3_path))
-    return f"/static/audio/{filename}"
+    return url_for('static', filename=f'audio/{filename}', _external=True)
 
 @app.route("/ask", methods=["POST"])
 def ask():
     user_input = request.json.get("message", "").strip()
     if not user_input:
         return jsonify({"response": "Please say something!"})
-
+    
     response_text = chat_with_ai(user_input)
     audio_url = generate_speech(response_text)
 
