@@ -37,6 +37,10 @@ def generate_speech(text):
     asyncio.run(edge_speak_async(text, mp3_path))
     return f"/static/audio/{filename}"
 
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"status": "ok", "message": "Voxa API is running!"})
+
 @app.route("/ask", methods=["POST"])
 def ask():
     user_input = request.json.get("message", "").strip()
