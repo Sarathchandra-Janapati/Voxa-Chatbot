@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: voxa-ai
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
+      - key: GROQ_API_KEY
+        value: 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
+
