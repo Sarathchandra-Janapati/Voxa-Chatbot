@@ -5,3 +5,4 @@ edge-tts
 playsound==1.2.2
 setuptools<70
 wheel
+gunicorn
