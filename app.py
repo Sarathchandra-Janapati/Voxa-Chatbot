@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-client = Groq(api_key="GROQ_API_KEY")
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 speech_thread = None
 
