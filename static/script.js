@@ -5,24 +5,25 @@ const voiceBtn = document.getElementById("voice-btn");
 const typingIndicator = document.getElementById("typing-indicator");
 
 async function sendMessage(message) {
-    // Add user message
     addMessage(message, "user");
-
     typingIndicator.style.display = "block";
 
-    // Send to backend
     const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
     });
 
     const data = await response.json();
-
     typingIndicator.style.display = "none";
 
-    // Add AI message
     addMessage(data.response, "ai");
+
+    // ✅ Play AI Voice
+    if (data.audio_url) {
+        const audio = new Audio(data.audio_url);
+        audio.play();
+    }
 }
 
 function addMessage(text, sender) {
@@ -33,7 +34,6 @@ function addMessage(text, sender) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Button click
 sendBtn.addEventListener("click", () => {
     if (userInput.value.trim() !== "") {
         sendMessage(userInput.value.trim());
@@ -41,12 +41,11 @@ sendBtn.addEventListener("click", () => {
     }
 });
 
-// Enter key
 userInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendBtn.click();
 });
 
-// Voice recognition
+// ✅ Voice recognition
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.lang = "en-US";
 
