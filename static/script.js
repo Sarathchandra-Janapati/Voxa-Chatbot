@@ -4,25 +4,39 @@ const sendBtn = document.getElementById("send-btn");
 const voiceBtn = document.getElementById("voice-btn");
 const typingIndicator = document.getElementById("typing-indicator");
 
+let currentAudio = null; // ✅ Per-session (per-device) audio
+
 async function sendMessage(message) {
     addMessage(message, "user");
     typingIndicator.style.display = "block";
 
-    const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-    });
+    // ✅ Stop current audio only for THIS device/session
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
 
-    const data = await response.json();
-    typingIndicator.style.display = "none";
+    try {
+        const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
 
-    addMessage(data.response, "ai");
+        const data = await response.json();
+        typingIndicator.style.display = "none";
 
-    // ✅ Play AI Voice
-    if (data.audio_url) {
-        const audio = new Audio(data.audio_url);
-        audio.play();
+        addMessage(data.response, "ai");
+
+        // ✅ Play audio only for this session
+        if (data.audio_url) {
+            currentAudio = new Audio(data.audio_url);
+            currentAudio.play();
+        }
+    } catch (error) {
+        typingIndicator.style.display = "none";
+        addMessage("Error connecting to server.", "ai");
     }
 }
 
@@ -34,6 +48,7 @@ function addMessage(text, sender) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// ✅ Button click
 sendBtn.addEventListener("click", () => {
     if (userInput.value.trim() !== "") {
         sendMessage(userInput.value.trim());
@@ -41,6 +56,7 @@ sendBtn.addEventListener("click", () => {
     }
 });
 
+// ✅ Enter key
 userInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendBtn.click();
 });
