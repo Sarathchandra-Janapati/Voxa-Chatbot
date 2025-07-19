@@ -1,3 +1,5 @@
+const API_BASE_URL = "https://voxa-chatbot.onrender.com";
+
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
@@ -11,16 +13,15 @@ let autoListenTimer = null;
 async function sendMessage(message) {
     if (!message.trim()) return;
 
-    // ✅ Stop previous speech immediately if user interrupts
-    stopCurrentSpeech();
+    stopCurrentSpeech(); // ✅ Stop previous speech immediately
 
     addMessage(message, "user");
     typingIndicator.style.display = "block";
 
-    const requestId = ++currentRequestId; // ✅ Only the latest request matters
+    const requestId = ++currentRequestId; // ✅ Only latest request matters
 
     try {
-        const response = await fetch("https://voxa-chatbot.onrender.com/ask", {
+        const response = await fetch(`${API_BASE_URL}/ask`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message })
@@ -28,19 +29,16 @@ async function sendMessage(message) {
 
         const data = await response.json();
 
-        // ✅ If user interrupted and a new request was made, ignore this response
-        if (requestId !== currentRequestId) return;
+        if (requestId !== currentRequestId) return; // ✅ Ignore outdated response
 
         typingIndicator.style.display = "none";
         addMessage(data.response, "ai");
 
-        // ✅ Speak new response only if it's the latest
         if (data.audio_url) {
-            currentAudio = new Audio("https://voxa-chatbot.onrender.com" + data.audio_url);
+            currentAudio = new Audio(`${API_BASE_URL}${data.audio_url}`);
             currentAudio.play();
 
             currentAudio.onended = () => {
-                // ✅ If still latest request, auto-listen
                 if (requestId === currentRequestId) autoStartListening();
             };
         } else {
@@ -63,7 +61,6 @@ function addMessage(text, sender) {
 }
 
 function stopCurrentSpeech() {
-    // ✅ Stop previous audio immediately
     if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
@@ -72,7 +69,6 @@ function stopCurrentSpeech() {
     clearTimeout(autoListenTimer);
 }
 
-// ✅ Auto voice listening after response ends
 function autoStartListening() {
     clearTimeout(autoListenTimer);
     autoListenTimer = setTimeout(() => {
